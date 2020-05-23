@@ -414,7 +414,7 @@ namespace Sharpmake.Generators.FastBuild
 
                 string bffKeyRelative = Path.Combine(projectPathRelativeFromMasterBff, Path.GetFileName(projectBffFullPath));
 
-                result.AppendLine($"#include \"{bffKeyRelative}\"");
+                result.AppendLine($"#include {Util.DoubleQuotes}{bffKeyRelative}{Util.DoubleQuotes}");
             }
 
             string fastBuildMasterBffDependencies = result.Length == 0 ? FileGeneratorUtilities.RemoveLineTag : result.ToString();
@@ -422,7 +422,7 @@ namespace Sharpmake.Generators.FastBuild
             GenerateMasterBffGlobalSettingsFile(builder, globalConfigFullPath, masterBffInfo);
 
             using (fileGenerator.Declare("fastBuildProjectName", masterBffFileName))
-            using (fileGenerator.Declare("fastBuildGlobalConfigurationInclude", $"#include \"{globalConfigFileName}\""))
+            using (fileGenerator.Declare("fastBuildGlobalConfigurationInclude", $"#include {Util.DoubleQuotes}{globalConfigFileName}{Util.DoubleQuotes}"))
             {
                 fileGenerator.Write(Bff.Template.ConfigurationFile.HeaderFile);
                 foreach (Platform platform in platformBffCache.Keys) // kind of cheating to use that cache instead of the masterBffInfo.CompilerSettings, but it works :)

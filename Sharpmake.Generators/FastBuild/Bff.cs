@@ -677,7 +677,7 @@ namespace Sharpmake.Generators.FastBuild
                                 if (refByPath.StartsWith(context.Project.RootPath, StringComparison.OrdinalIgnoreCase))
                                     refByPathCopy = CurrentBffPathKeyCombine(Util.PathGetRelative(context.ProjectDirectory, refByPath));
 
-                                fastBuildAdditionalCompilerOptionsFromCode += "/FU\"" + refByPathCopy + "\" ";
+                                fastBuildAdditionalCompilerOptionsFromCode += $"/FU{Util.DoubleQuotes}{refByPathCopy}{Util.DoubleQuotes} ";
                             }
                         }
 
@@ -928,7 +928,7 @@ namespace Sharpmake.Generators.FastBuild
                         if (projectHasEmbeddedResources)
                         {
                             embeddedResourceFilesSections.Add(fastBuildOutputFileShortName + "_embedded");
-                            scopedOptions.Add(new Options.ScopedOption(confCmdLineOptions, "EmbedResources", "/ASSEMBLYRESOURCE:\"%3\""));
+                            scopedOptions.Add(new Options.ScopedOption(confCmdLineOptions, "EmbedResources", $"/ASSEMBLYRESOURCE:{Util.DoubleQuotes}%3{Util.DoubleQuotes}"));
                         }
                         else
                         {
@@ -1375,7 +1375,7 @@ namespace Sharpmake.Generators.FastBuild
                     if (string.IsNullOrWhiteSpace(resourceDefine))
                         continue;
 
-                    fastBuildDefines.Add(string.Format(@"{0}""{1}""", platformDefineSwitch, resourceDefine.Replace(@"""", @"\""")));
+                    fastBuildDefines.Add($@"{platformDefineSwitch}{Util.DoubleQuotes}{resourceDefine.Replace(Util.DoubleQuotes, Util.EscapedDoubleQuotes)}{Util.DoubleQuotes}");
                 }
                 context.CommandLineOptions["ResourcePreprocessorDefinitions"] = string.Join($"'{Environment.NewLine}                                    + ' ", fastBuildDefines);
             }

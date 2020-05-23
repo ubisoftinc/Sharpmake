@@ -1076,7 +1076,7 @@ namespace Sharpmake.Generators.VisualStudio
                         break;
                     case Project.NuGetPackageMode.PackageConfig:
                     case Project.NuGetPackageMode.ProjectJson:
-                        throw new Error($"Unsupported explicit NuGetReferenceType \"{project.NuGetReferenceType}\"");
+                        throw new Error($"Unsupported explicit NuGetReferenceType {Util.DoubleQuotes}{project.NuGetReferenceType}{Util.DoubleQuotes}");
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -1734,7 +1734,7 @@ namespace Sharpmake.Generators.VisualStudio
 
                             string wcfStorage = Path.GetDirectoryName(file);
                             if (wcfStorage.IndexOf(project.WcfBaseStorage, StringComparison.OrdinalIgnoreCase) < 0)
-                                throw new Error($"WCF file storage \"{wcfStorage}\" does not match project.{nameof(project.WcfBaseStorage)}:\"{project.WcfBaseStorage}\"");
+                                throw new Error($"WCF file storage {Util.DoubleQuotes}{wcfStorage}{Util.DoubleQuotes} does not match project.{nameof(project.WcfBaseStorage)}:{Util.DoubleQuotes}{project.WcfBaseStorage}{Util.DoubleQuotes}");
 
                             itemGroups.WCFMetadataStorages.Add(new ItemGroups.WCFMetadataStorage { Include = wcfStorage });
                             break;
@@ -3217,7 +3217,7 @@ namespace Sharpmake.Generators.VisualStudio
             defines.AddRange(options.ExplicitDefines);
             defines.AddRange(conf.Defines);
 
-            options["PreprocessorDefinitions"] = defines.JoinStrings(";").Replace(@"""", @"\&quot;");
+            options["PreprocessorDefinitions"] = defines.JoinStrings(";").Replace(Util.DoubleQuotes, @"\&quot;");
 
             return options;
         }

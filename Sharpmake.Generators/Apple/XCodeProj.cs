@@ -706,7 +706,7 @@ namespace Sharpmake.Generators.Apple
         {
             XCodeOptions options = new XCodeOptions();
 
-            options["Archs"] = "\"$(ARCHS_STANDARD_32_64_BIT)\"";
+            options["Archs"] = $"{Util.DoubleQuotes}$(ARCHS_STANDARD_32_64_BIT){Util.DoubleQuotes}";
             options["CodeSignEntitlements"] = RemoveLineTag;
             options["DevelopmentTeam"] = RemoveLineTag;
             options["ProvisioningStyle"] = "Automatic";
@@ -775,7 +775,7 @@ namespace Sharpmake.Generators.Apple
 
             Options.SelectOption(conf,
                 Options.Option(Options.XCode.Compiler.DebugInformationFormat.Dwarf, () => options["DebugInformationFormat"] = "dwarf"),
-                Options.Option(Options.XCode.Compiler.DebugInformationFormat.DwarfWithDSym, () => options["DebugInformationFormat"] = "\"dwarf-with-dsym\""),
+                Options.Option(Options.XCode.Compiler.DebugInformationFormat.DwarfWithDSym, () => options["DebugInformationFormat"] = $"{Util.DoubleQuotes}dwarf-with-dsym{Util.DoubleQuotes}"),
                 Options.Option(Options.XCode.Compiler.DebugInformationFormat.Stabs, () => options["DebugInformationFormat"] = "stabs")
                 );
 
@@ -835,7 +835,7 @@ namespace Sharpmake.Generators.Apple
                 );
 
             Strings frameworkPaths = Options.GetStrings<Options.XCode.Compiler.FrameworkPaths>(conf);
-            options["FrameworkPaths"] = XCodeOptions.ResolveProjectPaths(project, frameworkPaths.JoinStrings(",\n", "\t\t\t\t\t\"", "\"").TrimEnd('\n'));
+            options["FrameworkPaths"] = XCodeOptions.ResolveProjectPaths(project, frameworkPaths.JoinStrings(",\n", "\t\t\t\t\t\"", Util.DoubleQuotes).TrimEnd('\n'));
 
             Options.SelectOption(conf,
                 Options.Option(Options.XCode.Compiler.GenerateDebuggingSymbols.Disable, () => options["GenerateDebuggingSymbols"] = "NO"),
@@ -1006,7 +1006,7 @@ namespace Sharpmake.Generators.Apple
             OrderableStrings includePaths = conf.IncludePaths;
             includePaths.AddRange(conf.IncludePrivatePaths);
             includePaths.AddRange(conf.DependenciesIncludePaths);
-            options["IncludePaths"] = includePaths.JoinStrings(",\n", "\t\t\t\t\t\"", "\"").TrimEnd('\n');
+            options["IncludePaths"] = includePaths.JoinStrings(",\n", "\t\t\t\t\t\"", Util.DoubleQuotes).TrimEnd('\n');
 
             OrderableStrings libraryPaths = conf.LibraryPaths;
             libraryPaths.AddRange(conf.ResolvedDependencies.Select(libPaths => libPaths.TargetPath));
@@ -1017,7 +1017,7 @@ namespace Sharpmake.Generators.Apple
             }
             else
             {
-                options["LibraryPaths"] = conf.LibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", "\"").TrimEnd('\n');
+                options["LibraryPaths"] = conf.LibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", Util.DoubleQuotes).TrimEnd('\n');
             }
 
             Strings specificDeviceLibraryPaths = Options.GetStrings<Options.XCode.Compiler.SpecificDeviceLibraryPaths>(conf);
@@ -1028,7 +1028,7 @@ namespace Sharpmake.Generators.Apple
             }
             else
             {
-                options["SpecificDeviceLibraryPaths"] = XCodeOptions.ResolveProjectPaths(project, specificDeviceLibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", "\"").TrimEnd('\n'));
+                options["SpecificDeviceLibraryPaths"] = XCodeOptions.ResolveProjectPaths(project, specificDeviceLibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", Util.DoubleQuotes).TrimEnd('\n'));
             }
 
             Strings specificSimulatorLibraryPaths = Options.GetStrings<Options.XCode.Compiler.SpecificSimulatorLibraryPaths>(conf);
@@ -1039,7 +1039,7 @@ namespace Sharpmake.Generators.Apple
             }
             else
             {
-                options["SpecificSimulatorLibraryPaths"] = XCodeOptions.ResolveProjectPaths(project, specificSimulatorLibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", "\"").TrimEnd('\n'));
+                options["SpecificSimulatorLibraryPaths"] = XCodeOptions.ResolveProjectPaths(project, specificSimulatorLibraryPaths.JoinStrings(",\n", "\t\t\t\t\t\"", Util.DoubleQuotes).TrimEnd('\n'));
             }
 
             options["PreprocessorDefinitions"] = RemoveLineTag;
@@ -1058,13 +1058,13 @@ namespace Sharpmake.Generators.Apple
                 conf.Defines.Add("NDEBUG");
 
             if (conf.Defines.Any())
-                options["PreprocessorDefinitions"] = conf.Defines.Select(item => "\t\t\t\t\t\"" + item.Replace("\"", "") + "\"").Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
+                options["PreprocessorDefinitions"] = conf.Defines.Select(item => "\t\t\t\t\t\"" + item.Replace(Util.DoubleQuotes, "") + Util.DoubleQuotes).Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
             if (conf.AdditionalCompilerOptions.Any())
-                options["CompilerOptions"] = conf.AdditionalCompilerOptions.Select(item => "\t\t\t\t\t\"" + item.Replace("\"", "") + "\"").Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
+                options["CompilerOptions"] = conf.AdditionalCompilerOptions.Select(item => "\t\t\t\t\t\"" + item.Replace(Util.DoubleQuotes, "") + Util.DoubleQuotes).Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
             if (conf.AdditionalLibrarianOptions.Any())
                 throw new NotImplementedException(nameof(conf.AdditionalLibrarianOptions) + " not supported with XCode generator");
             if (linkerOptions.Any())
-                options["LinkerOptions"] = linkerOptions.Select(item => "\t\t\t\t\t\"" + item.Replace("\"", "") + "\"").Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
+                options["LinkerOptions"] = linkerOptions.Select(item => "\t\t\t\t\t\"" + item.Replace(Util.DoubleQuotes, "") + Util.DoubleQuotes).Aggregate((first, next) => first + ",\n" + next).TrimEnd('\n', '\t');
             return options;
         }
 
@@ -1307,7 +1307,7 @@ namespace Sharpmake.Generators.Apple
             {
                 switch (_extension)
                 {
-                    case "": return "\"compiled.mach-o.executable\"";
+                    case "": return $"{Util.DoubleQuotes}compiled.mach-o.executable{Util.DoubleQuotes}";
                     case ".c": return "sourcecode.c.c";
                     case ".cpp": return "sourcecode.cpp.cpp";
                     case ".h": return "sourcecode.c.h";
@@ -1317,13 +1317,13 @@ namespace Sharpmake.Generators.Apple
                     case ".j": return "sourcecode.c.objc";
                     case ".mm": return "sourcecode.cpp.objcpp";
 
-                    case ".xcodeproj": return "\"wrapper.pb-project\"";
+                    case ".xcodeproj": return $"{Util.DoubleQuotes}wrapper.pb-project{Util.DoubleQuotes}";
                     case ".framework": return "wrapper.framework";
-                    case ".bundle": return "\"wrapper.plug-in\"";
+                    case ".bundle": return $"{Util.DoubleQuotes}wrapper.plug-in{Util.DoubleQuotes}";
                     case ".nib": return "wrapper.nib";
                     case ".app": return "wrapper.application";
                     case ".xctest": return "wrapper.cfbundle";
-                    case ".dylib": return "\"compiled.mach-o.dylib\"";
+                    case ".dylib": return $"{Util.DoubleQuotes}compiled.mach-o.dylib{Util.DoubleQuotes}";
 
                     case ".txt": return "text";
                     case ".plist": return "text.plist.xml";
@@ -1345,7 +1345,7 @@ namespace Sharpmake.Generators.Apple
                     case ".xib": return "file.xib";
                 }
 
-                return "\"?\"";
+                return $"{Util.DoubleQuotes}?{Util.DoubleQuotes}";
             }
 
             public override string Extension { get { return _extension; } }
