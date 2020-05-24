@@ -1197,9 +1197,7 @@ namespace Sharpmake
                 // Class does not declare a constructor, so impossible to guess file name
                 if (sourceFile == null)
                 {
-                    throw new Error(
-                        "The type \"" + type + "\" does not declare a constructor, " +
-                        "please add one to allow Sharpmake to detect source file from construction callstack.");
+                    throw new Error($"The type {Util.DoubleQuotes}{type}{Util.DoubleQuotes} does not declare a constructor, please add one to allow Sharpmake to detect source file from construction callstack.");
                 }
 
                 return true;
@@ -1317,7 +1315,7 @@ namespace Sharpmake
                 {
                     if (!object.Equals(firstValue, secondValue))
                     {
-                        messageWriter.WriteLine(propertyInfo.Name + ": \"" + firstValue + "\" and \"" + secondValue + "\"");
+                        messageWriter.WriteLine($"{propertyInfo.Name}: {Util.DoubleQuotes}{firstValue}{Util.DoubleQuotes} and {Util.DoubleQuotes}{secondValue}{Util.DoubleQuotes}");
                     }
                 }
                 else
@@ -1327,7 +1325,7 @@ namespace Sharpmake
                     {
                         if (SequenceCompare(firstValue as IEnumerable, secondValue as IEnumerable) != 0)
                         {
-                            messageWriter.WriteLine(propertyInfo.Name + ": \"" + firstValue + "\" and \"" + secondValue + "\"");
+                            messageWriter.WriteLine($"{propertyInfo.Name}: {Util.DoubleQuotes}{firstValue}{Util.DoubleQuotes} and {Util.DoubleQuotes}{secondValue}{Util.DoubleQuotes}");
                         }
                     }
                     else

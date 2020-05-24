@@ -271,7 +271,7 @@ namespace Sharpmake
 
             conf.CsprojUserFile = new Project.Configuration.CsprojUserFileSettings();
             conf.CsprojUserFile.StartAction = Project.Configuration.CsprojUserFileSettings.StartActionSetting.Program;
-            string quote = Util.IsRunningInMono() ? @"\""" : @""""; // When running in Mono, we must escape "
+            string quote = Util.IsRunningInMono() ? Util.EscapedDoubleQuotes : Util.DoubleQuotes; // When running in Mono, we must escape "
             conf.CsprojUserFile.StartArguments = $@"/sources(@{quote}{string.Join(";", MainSources)}{quote}) {startArguments}";
             conf.CsprojUserFile.StartProgram = sharpmakeApplicationExePath;
         }
