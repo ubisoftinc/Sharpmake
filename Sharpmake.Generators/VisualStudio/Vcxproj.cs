@@ -825,7 +825,7 @@ namespace Sharpmake.Generators.VisualStudio
 
                 if (extension != platformVcxproj.StaticLibraryFileExtension && extension != platformVcxproj.SharedLibraryFileExtension)
                 {
-                    decoratedName = libPrefix + libraryFile;
+                    decoratedName = Util.PathAddPrefixToFileName(libPrefix, libraryFile);
                     if (!string.IsNullOrEmpty(platformVcxproj.StaticLibraryFileExtension))
                         decoratedName += "." + platformVcxproj.StaticLibraryFileExtension;
                 }
