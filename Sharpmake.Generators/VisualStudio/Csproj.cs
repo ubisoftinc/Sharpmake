@@ -1156,7 +1156,7 @@ namespace Sharpmake.Generators.VisualStudio
 
             var preImportCustomProperties = new Dictionary<string, string>(project.PreImportCustomProperties);
             AddPreImportCustomProperties(preImportCustomProperties, project, projectPath);
-            WriteCustomProperties(preImportCustomProperties, project, writer, resolver);
+            WriteCustomProperties(preImportCustomProperties, writer, resolver);
 
             var preImportProjects = new List<ImportProject>(project.PreImportProjects);
             WriteImportProjects(preImportProjects.Distinct(EqualityComparer<ImportProject>.Default), project, configurations.First(), writer, resolver);
@@ -1260,7 +1260,7 @@ namespace Sharpmake.Generators.VisualStudio
                 Write(Template.MSBuild14PropertyGroup, writer, resolver);
             }
 
-            WriteCustomProperties(project.CustomProperties, project, writer, resolver);
+            WriteCustomProperties(project.CustomProperties, writer, resolver);
 
             if (project.ProjectTypeGuids == CSharpProjectType.Wcf)
             {
@@ -1455,6 +1455,8 @@ namespace Sharpmake.Generators.VisualStudio
 
             WriteImportProjects(importProjects.Distinct(EqualityComparer<ImportProject>.Default), project, configurations.First(), writer, resolver);
 
+            WriteCustomProperties(project.CustomPropertiesPostImport, writer, resolver);
+
             foreach (var element in project.UsingTasks)
             {
                 using (resolver.NewScopedParameter("project", project))
@@ -1540,7 +1542,7 @@ namespace Sharpmake.Generators.VisualStudio
         }
 
         // TODO: remove this and use Sharpmake.Generators.VisualStudio.VsProjCommon.WriteCustomProperties instead
-        private static void WriteCustomProperties(Dictionary<string, string> customProperties, Project project, StreamWriter writer, Resolver resolver)
+        private static void WriteCustomProperties(Dictionary<string, string> customProperties, StreamWriter writer, Resolver resolver)
         {
             if (customProperties.Any())
             {
@@ -1555,13 +1557,6 @@ namespace Sharpmake.Generators.VisualStudio
             }
         }
 
-        internal enum CopyToOutputDirectory
-        {
-            Never,
-            Always,
-            PreserveNewest
-        }
-
         private void GenerateFiles(
             CSharpProject project,
             List<Project.Configuration> configurations,
@@ -1574,7 +1569,7 @@ namespace Sharpmake.Generators.VisualStudio
             foreach (var file in project.ResolvedContentFullFileNames)
             {
                 string include = Util.PathGetRelative(_projectPathCapitalized, file);
-                itemGroups.Contents.Add(new ItemGroups.Content { Include = include, LinkFolder = project.GetLinkFolder(include) });
+                itemGroups.Contents.Add(new ItemGroups.Content { Include = include, CopyToOutputDirectory = project.DefaultContentCopyOperation, LinkFolder = project.GetLinkFolder(include) });
             }
 
 
@@ -1661,7 +1656,7 @@ namespace Sharpmake.Generators.VisualStudio
 
             HashSet<string> allContents = new HashSet<string>(itemGroups.Contents.Select(c => c.Include));
             List<string> resolvedSources = project.ResolvedSourceFiles.Select(source => Util.PathGetRelative(_projectPathCapitalized, Project.GetCapitalizedFile(source))).ToList();
-            List<string> resolvedResources = project.ResourceFiles.Concat(project.ResolvedResourcesFullFileNames).Select(resource => Util.PathGetRelative(_projectPathCapitalized, Project.GetCapitalizedFile(resource))).Distinct().ToList();
+            List<string> resolvedResources = project.ResourceFiles.Concat(project.NonEmbeddedResourceFiles).Concat(project.ResolvedResourcesFullFileNames).Select(resource => Util.PathGetRelative(_projectPathCapitalized, Project.GetCapitalizedFile(resource))).Distinct().ToList();
             List<string> resolvedEmbeddedResource = project.ResourceFiles.Concat(project.AdditionalEmbeddedResource).Concat(project.AdditionalEmbeddedAssemblies).Select(f => Util.PathGetRelative(_projectPathCapitalized, Project.GetCapitalizedFile(f))).Distinct().ToList();
             List<string> resolvedNoneFiles =
                 (project.NoneFiles.Select(file => Util.PathGetRelative(_projectPathCapitalized, Project.GetCapitalizedFile(file))))
@@ -2085,7 +2080,7 @@ namespace Sharpmake.Generators.VisualStudio
                 bool runtimeTemplate = project.AdditionalRuntimeTemplates.Contains(ttFile);
                 string expectedExtension =
                     runtimeTemplate ? ".cs" :
-                    Util.GetTextTemplateDirectiveParam(Path.Combine(_projectPath, ttFile), "output", "extension") ?? ".cs";
+                    Util.GetTextTemplateOutputExtension(Path.Combine(_projectPath, ttFile)) ?? ".cs";
                 if (!expectedExtension.StartsWith(".", StringComparison.Ordinal))
                     expectedExtension = "." + expectedExtension;
                 string fileNameWithoutExtension = ttFile.Substring(0, ttFile.Length - TTExtension.Length);
@@ -2202,11 +2197,7 @@ namespace Sharpmake.Generators.VisualStudio
                         itemGroups.AddReference(dotNetFramework, referencesByName);
                     }
                 }
-            }
 
-            foreach (var conf in configurations)
-            {
-                var dotNetFramework = conf.Target.GetFragment<DotNetFramework>();
                 foreach (var str in conf.ReferencesByNameExternal)
                 {
                     var referencesByNameExternal = new ItemGroups.Reference
@@ -2216,11 +2207,18 @@ namespace Sharpmake.Generators.VisualStudio
                     };
                     itemGroups.AddReference(dotNetFramework, referencesByNameExternal);
                 }
-            }
 
-            foreach (var conf in configurations)
-            {
-                var dotNetFramework = conf.Target.GetFragment<DotNetFramework>();
+                foreach (var str in conf.ReferencesByNameInterop)
+                {
+                    var referencesByNameExternal = new ItemGroups.Reference
+                    {
+                        Include = str,
+                        Private = project.DependenciesCopyLocal.HasFlag(Project.DependenciesCopyLocalTypes.DotNetExtensions),
+                        EmbedInteropTypes = true,
+                    };
+                    itemGroups.AddReference(dotNetFramework, referencesByNameExternal);
+                }
+
                 foreach (var str in conf.ReferencesByPath.Select(Util.GetCapitalizedPath))
                 {
                     var referencesByPath = new ItemGroups.Reference
@@ -2229,6 +2227,19 @@ namespace Sharpmake.Generators.VisualStudio
                         SpecificVersion = false,
                         HintPath = Util.PathGetRelative(_projectPathCapitalized, str),
                         Private = project.DependenciesCopyLocal.HasFlag(Project.DependenciesCopyLocalTypes.ExternalReferences),
+                    };
+                    itemGroups.AddReference(dotNetFramework, referencesByPath);
+                }
+                
+                foreach (var str in conf.InteropReferencesByPath.Select(Util.GetCapitalizedPath))
+                {
+                    var referencesByPath = new ItemGroups.Reference
+                    {
+                        Include = Path.GetFileNameWithoutExtension(str),
+                        SpecificVersion = false,
+                        HintPath = Util.PathGetRelative(_projectPathCapitalized, str),
+                        Private = project.DependenciesCopyLocal.HasFlag(Project.DependenciesCopyLocalTypes.ExternalReferences),
+                        EmbedInteropTypes = true,
                     };
                     itemGroups.AddReference(dotNetFramework, referencesByPath);
                 }
@@ -2244,11 +2255,7 @@ namespace Sharpmake.Generators.VisualStudio
                     };
                     itemGroups.AddReference(dotNetFramework, referencesByPath);
                 }
-            }
 
-            foreach (var conf in configurations)
-            {
-                var dotNetFramework = conf.Target.GetFragment<DotNetFramework>();
                 if (dotNetFramework.IsDotNetFramework())
                 {
                     foreach (var r in conf.DotNetReferences)

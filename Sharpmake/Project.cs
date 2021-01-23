@@ -159,6 +159,9 @@ namespace Sharpmake
         public Strings ResourceFiles = new Strings();
         public Strings ResourceFilesExtensions = new Strings();
 
+        public Strings NonEmbeddedResourceFiles = new Strings();
+        public Strings NonEmbeddedResourceFilesExtensions = new Strings();
+
         public Strings NatvisFiles = new Strings();
         public Strings NatvisFilesExtensions = new Strings(".natvis");
 
@@ -237,6 +240,7 @@ namespace Sharpmake
 
         public Dictionary<string, string> PreImportCustomProperties = new Dictionary<string, string>();      // pre import properties are added before any imports to the project xml as <Key>Value</Key>
         public Dictionary<string, string> CustomProperties = new Dictionary<string, string>();      // custom properties are added to the project xml as <Key>Value</Key>
+        public Dictionary<string, string> CustomPropertiesPostImport = new Dictionary<string, string>();  // additional custom properties that are added after imports
 
         public Dictionary<string, string> CustomFilterMapping = new Dictionary<string, string>();  /// maps relative source directory to a custom filter path for vcxproj.filter files
 
@@ -867,7 +871,7 @@ namespace Sharpmake
             }
 
             // Only scan directory for files if needed
-            if (SourceFilesExtensions.Count != 0 || ResourceFilesExtensions.Count != 0 || PRIFilesExtensions.Count != 0 || NoneExtensions.Count != 0 || NoneExtensionsCopyIfNewer.Count != 0)
+            if (SourceFilesExtensions.Count != 0 || ResourceFilesExtensions.Count != 0 || NonEmbeddedResourceFilesExtensions.Count != 0 || PRIFilesExtensions.Count != 0 || NoneExtensions.Count != 0 || NoneExtensionsCopyIfNewer.Count != 0)
             {
                 string capitalizedSourceRootPath = Util.GetCapitalizedPath(SourceRootPath);
 
@@ -899,6 +903,7 @@ namespace Sharpmake
 
                     AddMatchExtensionFiles(additionalFiles, ref PRIFiles, PRIFilesExtensions);
                     AddMatchExtensionFiles(additionalFiles, ref ResourceFiles, ResourceFilesExtensions);
+                    AddMatchExtensionFiles(additionalFiles, ref NonEmbeddedResourceFiles, NonEmbeddedResourceFilesExtensions);
                     AddMatchExtensionFiles(additionalFiles, ref NatvisFiles, NatvisFilesExtensions);
                     AddMatchExtensionFiles(additionalFiles, ref NoneFiles, NoneExtensions);
                     AddMatchExtensionFiles(additionalFiles, ref NoneFilesCopyIfNewer, NoneExtensionsCopyIfNewer);
@@ -926,6 +931,9 @@ namespace Sharpmake
 
                 AddMatchExtensionFiles(files, ref ResourceFiles, ResourceFilesExtensions);
                 Util.ResolvePath(SourceRootPath, ref ResourceFiles);
+
+                AddMatchExtensionFiles(files, ref NonEmbeddedResourceFiles, NonEmbeddedResourceFilesExtensions);
+                Util.ResolvePath(SourceRootPath, ref NonEmbeddedResourceFiles);
 
                 AddMatchExtensionFiles(files, ref NatvisFiles, NatvisFilesExtensions);
                 Util.ResolvePath(SourceRootPath, ref NatvisFiles);
@@ -1969,6 +1977,7 @@ namespace Sharpmake
             // Disable automatic source files discovery
             SourceFilesExtensions.Clear();
             ResourceFilesExtensions.Clear();
+            NonEmbeddedResourceFilesExtensions.Clear();
             PRIFilesExtensions.Clear();
         }
     }
@@ -2066,6 +2075,13 @@ namespace Sharpmake
         public FileType FileType = FileType.File;
     }
 
+    public enum CopyToOutputDirectory
+    {
+        Never,
+        Always,
+        PreserveNewest
+    }
+
     public enum CSharpProjectType
     {
         Test,
@@ -2153,6 +2169,7 @@ namespace Sharpmake
             aspNetProject.ContentExtension.Add(contentExtension);
 
             aspNetProject.ResourceFilesExtensions.Remove(contentExtension);
+            aspNetProject.NonEmbeddedResourceFilesExtensions.Remove(contentExtension);
             aspNetProject.EmbeddedResourceExtensions.Remove(contentExtension);
 
             aspNetProject.NoneExtensions.Add(".pubxml");
@@ -2249,6 +2266,7 @@ namespace Sharpmake
     public class CSharpProject : Project
     {
         public Strings ContentExtension = new Strings();
+        public CopyToOutputDirectory? DefaultContentCopyOperation = null;
         public Strings VsctExtension = new Strings(".vsct");
         public CSharpProjectType ProjectTypeGuids = CSharpProjectType.Default;
         public CSharpProjectSchema ProjectSchema = CSharpProjectSchema.Default;
