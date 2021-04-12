@@ -67,6 +67,15 @@ namespace Sharpmake
                 }
             }
 
+            public string Resolve(Resolver resolver, string customTemplate)
+            {
+                using (resolver.NewScopedParameter("packageName", Name))
+                using (resolver.NewScopedParameter("packageVersion", Version))
+                {
+                    return resolver.Resolve(customTemplate);
+                }
+            }
+
             public int CompareTo(PackageReference other)
             {
                 if (ReferenceEquals(this, other)) return 0;
@@ -78,6 +87,11 @@ namespace Sharpmake
                 var referenceTypeComparison = string.Compare(ReferenceType, other.ReferenceType, StringComparison.OrdinalIgnoreCase);
                 if (referenceTypeComparison != 0) return referenceTypeComparison;
                 return string.Compare(string.Join(",", GetFormatedAssetsDependency(PrivateAssets)), string.Join(",", GetFormatedAssetsDependency(other.PrivateAssets)), StringComparison.OrdinalIgnoreCase);
+            }
+
+            public override string ToString()
+            {
+                return $"{Name} {Version}";
             }
 
             internal static IEnumerable<string> GetFormatedAssetsDependency(AssetsDependency dependency)
@@ -143,6 +157,11 @@ namespace Sharpmake
         public IEnumerator<PackageReference> GetEnumerator()
         {
             return _packageReferences.GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(",", SortedValues);
         }
 
         public List<PackageReference> SortedValues => _packageReferences.SortedValues;

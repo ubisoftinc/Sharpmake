@@ -15,7 +15,7 @@
 using Sharpmake;
 using System;
 
-namespace CSharpPackageReference
+namespace PackageReference
 {
     [Generate]
     public class PackageReferences : CSharpProject
@@ -54,6 +54,38 @@ namespace CSharpPackageReference
     }
 
     [Generate]
+    public class PackageReferencesCPP : Project
+    {
+        public PackageReferencesCPP()
+        {
+            AddTargets(new Target(
+            Platform.win64,
+            DevEnv.vs2015 | DevEnv.vs2017 | DevEnv.vs2019,
+            Optimization.Debug | Optimization.Release,
+            OutputType.Dll,
+            Blob.NoBlob,
+            BuildSystem.MSBuild,
+            DotNetFramework.v4_5 | DotNetFramework.v4_6_2));
+
+            RootPath = @"[project.SharpmakeCsPath]\projects\[project.Name]";
+
+            // This Path will be used to get all SourceFiles in this Folder and all subFolders
+            SourceRootPath = @"[project.SharpmakeCsPath]\codebase\[project.Name]";
+        }
+
+        [Configure()]
+        public virtual void ConfigureAll(Configuration conf, Target target)
+        {
+            conf.ProjectFileName = "[project.Name].[target.DevEnv].[target.Framework]";
+            conf.ProjectPath = @"[project.RootPath]";
+
+            conf.Options.Add(Options.Vc.Compiler.Exceptions.EnableWithSEH);
+            
+            conf.ReferencesByNuGetPackage.Add("gtest-vc140-static-64", "1.1.0");
+        }
+    }
+
+    [Generate]
     public class PackageReferenceSolution : CSharpSolution
     {
         public PackageReferenceSolution()
@@ -66,18 +98,27 @@ namespace CSharpPackageReference
             Blob.NoBlob,
             BuildSystem.MSBuild,
             DotNetFramework.v4_5 | DotNetFramework.v4_6_2));
+
+            AddTargets(new Target(
+            Platform.win64,
+            DevEnv.vs2015 | DevEnv.vs2017 | DevEnv.vs2019,
+            Optimization.Debug | Optimization.Release,
+            OutputType.Dll,
+            Blob.NoBlob,
+            BuildSystem.MSBuild,
+            DotNetFramework.v4_5 | DotNetFramework.v4_6_2));
         }
 
         [Configure()]
         public void ConfigureAll(Configuration conf, Target target)
         {
-            conf.SolutionFileName = String.Format("{0}.{1}.{2}",
-                                                  Name,
-                                                  "[target.DevEnv]",
-                                                  "[target.Framework]");
+            conf.SolutionFileName = "[solution.Name].[target.DevEnv].[target.Framework]";
             conf.SolutionPath = @"[solution.SharpmakeCsPath]\projects\";
 
-            conf.AddProject<PackageReferences>(target);
+            if (target.Platform == Platform.anycpu)
+                conf.AddProject<PackageReferences>(target);
+            else
+                conf.AddProject<PackageReferencesCPP>(target);
         }
 
         [Main]
