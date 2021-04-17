@@ -117,6 +117,7 @@ namespace SharpmakeGen.Samples
         }
     }
 
+
     [Generate]
     public class DotNetCoreFrameworkHelloWorldProject : SampleProject
     {
@@ -253,4 +254,15 @@ namespace SharpmakeGen.Samples
             Name = "SimpleExeLibDependency";
         }
     }
+
+    [Generate]
+    public class PreBuildStepDependency : SampleProject
+    {
+        public PreBuildStepDependency()
+        {
+            Name = "PreBuildStepDependency";
+            SharpmakeMainFile = "PreBuildStepDependency.sharpmake.cs";
+        }
+    }
+
 }
