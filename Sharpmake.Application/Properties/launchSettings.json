@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Sharpmake.Application": {
+      "commandName": "Project",
+      "commandLineArgs": "/sources(@\"F:\\RD\\BGE2\\build\\main.cs\",@\"F:\\RD\\BGE2\\build\\user\\local.userSpecs.cs\") /userSpecs(@\"GenerateAdditionalPcTargets\",true) /verbose /profile(\"sharpmake_bge2.profile.json\")",
+      "workingDirectory": "F:\\RD\\BGE2\\build"
+    }
+  }
+}
